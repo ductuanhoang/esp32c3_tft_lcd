@@ -13,10 +13,13 @@ static lv_color_t *buf2;
 
 TFT_eSPI tft = TFT_eSPI();
 
-#define I2C_SDA 21
-#define I2C_SCL 22
-// #define TP_RST 25
-// #define TP_INT 21
+#define I2C_SDA 20
+#define I2C_SCL 21
+
+#define TP_RST 5
+#define TP_INT 4
+
+#define SD_CS 7
 // sd card
 FT6236 touch = FT6236();
 
@@ -66,8 +69,6 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
   else
     data->state = LV_INDEV_STATE_REL;
 }
-
-#define SD_CS 15
 
 static void sd_card_init(void)
 {
@@ -136,7 +137,12 @@ void sd_card_test_list_file(void)
 void setup()
 {
   Serial.begin(115200);
-
+  // touch RST
+  pinMode(TP_RST, OUTPUT);
+  digitalWrite(TP_RST, LOW);
+  delay(10);
+  digitalWrite(TP_RST, HIGH);
+  delay(10);
   if (!touch.begin(40, I2C_SDA, I2C_SCL)) // 40 in this case represents the sensitivity. Try higer or lower for better response.
   {
     Serial.println("Unable to start the capacitive touchscreen.");

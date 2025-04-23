@@ -25,38 +25,35 @@ FT6236 touch = FT6236();
 
 #if LV_USE_LOG != 0
 
-void my_print(const char *buf)
-{
+void my_print(const char *buf) {
   Serial.printf(buf);
   Serial.flush();
 }
 #endif
 
-void setCS(uint8_t cs)
-{
+void setCS(uint8_t cs) {
   // if (cs)
   //   digitalWrite(cs, HIGH);
   // else
   //   digitalWrite(cs, LOW);
 }
 
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
-{
+void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
 
   // tft.startWrite();
-  tft.pushImageDMA(area->x1, area->y1, w, h, (uint16_t *)color_p);
+  // tft.pushImageDMA(area->x1, area->y1, w, h, (uint16_t *)color_p);
+  tft.pushImage(area->x1, area->y1, w, h, (uint16_t *)color_p);
+
   // tft.endWrite();
 
   lv_disp_flush_ready(disp);
 }
 
-void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
-{
+void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
   uint16_t touchX, touchY;
-  if (touch.touched())
-  {
+  if (touch.touched()) {
     // Retrieve a point
     TS_Point p = touch.getPoint();
     touchX = p.x;
@@ -65,13 +62,11 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
     /*Set the coordinates*/
     data->point.x = touchX;
     data->point.y = touchY;
-  }
-  else
+  } else
     data->state = LV_INDEV_STATE_REL;
 }
 
-static void sd_card_init(void)
-{
+static void sd_card_init(void) {
   pinMode(TFT_CS, OUTPUT);
   pinMode(SD_CS, OUTPUT);
   // Make sure both devices are deactivated before starting SPI
@@ -81,8 +76,7 @@ static void sd_card_init(void)
   delay(10);
   digitalWrite(SD_CS, LOW);
   // Initialize SPI first
-  if (!SD.begin(4))
-  {
+  if (!SD.begin(4)) {
     Serial.println("SD Card initialization failed!");
     return;
   }
@@ -91,38 +85,33 @@ static void sd_card_init(void)
   // Deactivate SD card and activate TFT
   digitalWrite(SD_CS, HIGH);
   delay(10);
-  digitalWrite(TFT_CS, LOW); // Ready to use TFT
+  digitalWrite(TFT_CS, LOW);  // Ready to use TFT
 }
 
-void sd_card_test_list_file(void)
-{
+void sd_card_test_list_file(void) {
   digitalWrite(SD_CS, LOW);
   lv_fs_dir_t dir;
   lv_fs_res_t res;
   setCS(false);
   res = lv_fs_dir_open(&dir, "A:/lvgl");
   setCS(false);
-  if (res != LV_FS_RES_OK)
-  {
+  if (res != LV_FS_RES_OK) {
     Serial.println("Failed to open directory");
     return;
   }
 
   char fn[256];
-  while (1)
-  {
+  while (1) {
     setCS(false);
     res = lv_fs_dir_read(&dir, fn);
     setCS(true);
-    if (res != LV_FS_RES_OK)
-    {
+    if (res != LV_FS_RES_OK) {
       Serial.println("Failed to read next file");
       break;
     }
 
     /*fn is empty, if not more files to read*/
-    if (strlen(fn) == 0)
-    {
+    if (strlen(fn) == 0) {
       break;
     }
 
@@ -134,8 +123,7 @@ void sd_card_test_list_file(void)
   setCS(true);
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   // touch RST
   pinMode(TP_RST, OUTPUT);
@@ -143,7 +131,7 @@ void setup()
   delay(10);
   digitalWrite(TP_RST, HIGH);
   delay(10);
-  if (!touch.begin(40, I2C_SDA, I2C_SCL)) // 40 in this case represents the sensitivity. Try higer or lower for better response.
+  if (!touch.begin(40, I2C_SDA, I2C_SCL))  // 40 in this case represents the sensitivity. Try higer or lower for better response.
   {
     Serial.println("Unable to start the capacitive touchscreen.");
   }
@@ -163,10 +151,12 @@ void setup()
   digitalWrite(27, LOW);
   tft.begin();
   tft.setRotation(0);
-  tft.initDMA();
+  // tft.initDMA();
 
-  buf1 = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * TFT_WIDTH * 200, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL); // screenWidth * screenHeight/2
-  buf2 = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * TFT_WIDTH * 200, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+  // buf1 = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * TFT_WIDTH * 200, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL); // screenWidth * screenHeight/2
+  // buf2 = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * TFT_WIDTH * 200, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+  buf1 = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * TFT_WIDTH * 200, MALLOC_CAP_INTERNAL);
+  buf2 = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * TFT_WIDTH * 200, MALLOC_CAP_INTERNAL);
 
   lv_disp_draw_buf_init(&draw_buf, buf1, buf2, TFT_WIDTH * 200);
 
@@ -191,8 +181,7 @@ void setup()
   tft.startWrite();
 }
 
-void loop()
-{
+void loop() {
   // put your main code here, to run repeatedly:
   lv_timer_handler();
   delay(5);
